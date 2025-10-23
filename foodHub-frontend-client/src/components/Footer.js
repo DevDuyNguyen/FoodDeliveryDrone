@@ -98,7 +98,7 @@ export default function Footer() {
         <Typography variant="body1" component="p" style={{ marginBottom: 28 }}>
           find a job?become food delivery may be your best choice!!!
         </Typography>
-        <Link to="">
+        <Link to="/delivery">
               <Button className={classes.buttonStyleTwo}>Become</Button>
         </Link>
       </Grid>

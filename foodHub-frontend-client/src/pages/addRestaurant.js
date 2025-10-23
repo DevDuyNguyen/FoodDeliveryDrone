@@ -71,6 +71,7 @@ export default function AddRestaurant() {
   let paymentError = null;
 
   if (errors) {
+
     for (let error of errors) {
       if (error.msg.includes("valid email")) emailError = error.msg;
       if (error.msg.includes("Email address already")) emailError = error.msg;

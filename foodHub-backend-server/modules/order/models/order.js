@@ -23,6 +23,11 @@ const orderSchema = new Schema(
       ],
     },
     user: {
+      userId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: "User",
+      },
       email: {
         type: String,
         required: true,
@@ -34,11 +39,6 @@ const orderSchema = new Schema(
       name: {
         type: String,
         required: true,
-      },
-      userId: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "User",
       },
     },
     seller: {

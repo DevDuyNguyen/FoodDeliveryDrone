@@ -29,7 +29,7 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./util/scrollToTop";
 
 //restrict routes
-import { AuthRoute, SellerRoute, UserRoute } from "./util/route";
+import { AuthRoute, SellerRoute, UserRoute,DeliveryRoute } from "./util/route";
 
 //pages
 import home from "./pages/home";
@@ -42,6 +42,8 @@ import restaurant from "./pages/restaurant";
 import sellerDash from "./pages/sellerDashboard";
 import cart from "./pages/cart";
 import orders from "./pages/orders";
+import profile from "./pages/profile";
+import Invoice from "./pages/Invoice";
 
 const theme = createMuiTheme(themeFile);
 
@@ -74,6 +76,8 @@ function App() {
             <AuthRoute exact path="/login" component={login} />
             <AuthRoute exact path="/register" component={signup} />
             <AuthRoute exact path="/delivery" component={delivery} />
+            <DeliveryRoute exact path="/delivery/profile" component={profile} />
+            <DeliveryRoute exact path="/delivery/OrderDetail" component={Invoice} />
             <AuthRoute exact path="/addrestaurant" component={addRestaurant} />
             <UserRoute exact path="/order/:restName" component={restaurant} />
             <SellerRoute

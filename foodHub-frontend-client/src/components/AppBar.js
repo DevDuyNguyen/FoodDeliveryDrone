@@ -79,11 +79,11 @@ export default function AppBarPrimary() {
               <Typography className={classes.buttonStyles}>
                 Hello, {firstName} {lastName}
               </Typography>
-              <Link to="/profile"> {/* Thêm link Hồ sơ cho Delivery */}
-                <Button className={classes.buttonStyles}>Profile</Button>
+              <Link to="/delivery/orderDetail"> {/* Thêm link Hồ sơ cho Delivery */}
+                <Button className={classes.buttonStyles}>orderDetail</Button>
               </Link>
-              <Link to="/delivery/orders"> {/* Có thể là link đơn hàng cho shipper */}
-                <Button className={classes.buttonStyles}>Orders</Button>
+              <Link to="/delivery/profile"> {/* Thêm link Hồ sơ cho Delivery */}
+                <Button className={classes.buttonStyles}>Profile</Button>
               </Link>
               <Button
                 onClick={handleLogout}

@@ -9,8 +9,11 @@ import {
   SET_ERROR,
   SET_UNAUTHENTICATED,
   SET_ERRORS_SIGNUP_SELLER,
+  SET_DELIVERY_PortraitPhotoUrl,
+  SET_DELIVERY_LicenseFrontPhotoUrl,
+  SET_DELIVERY_LicenseBackPhotoUrl
 } from "../types";
-
+import { useSelector } from "react-redux";
 import axios from "../../util/axios";
 import axiosNewInstance from "axios";
 
@@ -50,8 +53,8 @@ export const loginAction = (userData, history) => (dispatch) => {
       axios.defaults.headers.common["Authorization"] = jwt;
       dispatch(getUserData());
       dispatch({ type: CLEAR_ERRORS });
-      console.log("Authenticated, check localStorage", jwt);
       history.push("/");
+      // console.log("Authenticated, check localStorage", jwt);
     })
     .catch((err) => {
       if (err.response) {
@@ -77,6 +80,20 @@ export const getUserData = () => (dispatch) => {
         type: SET_USER,
         payload: res.data.result,
       });
+      if(res.data.result.account.role == 'ROLE_DELIVERY'){
+        dispatch({
+          type: SET_DELIVERY_PortraitPhotoUrl,
+          payload: res.data.result.portraitPhotoUrl
+        })
+        dispatch({
+          type: SET_DELIVERY_LicenseFrontPhotoUrl,
+          payload: res.data.result.licenseFrontPhotoUrl
+        })
+        dispatch({
+          type: SET_DELIVERY_LicenseBackPhotoUrl,
+          payload: res.data.result.licenseBackPhotoUrl
+        })
+      } 
     })
     .catch((err) => console.log(err));
 };

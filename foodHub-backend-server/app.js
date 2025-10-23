@@ -10,7 +10,7 @@ dotenv.config(path.join(__dirname, ".env"));
 const authRoutes = require("./modules/accesscontrol/route/auth");
 const itemRoutes = require("./modules/menu/route/item");
 const userRoutes = require("./modules/order/route/user");
-
+const deliveryRoutes = require("./modules/Delivery/route/delivery")
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     //[not done: this is still relative to the CWD]
@@ -39,7 +39,14 @@ const app = express();
 const upload = multer({ storage: fileStorage, fileFilter: fileFilter });
 
 app.use(bodyParser.json());
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use(
+  "/images",
+  (req, res, next) => {
+    console.log("client request an image", req.url);
+    next();
+  },
+  express.static(path.join(__dirname, "images"))
+);
 
 //set headers
 app.use((req, res, next) => {
@@ -52,7 +59,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/auth", upload.array("images", 10), authRoutes);
+app.use("/auth", authRoutes);
+app.use("/delivery",deliveryRoutes);
 // app.use("/auth", authRoutes);
 app.use("/seller", upload.single("image"), itemRoutes);
 app.use(userRoutes);

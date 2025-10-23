@@ -6,10 +6,14 @@ import {
   ADD_ITEM,
   DELETE_ITEM,
   EDIT_ITEM,
+  SET_DELIVERY_PortraitPhotoUrl,
+  SET_DELIVERY_LicenseFrontPhotoUrl,
+  SET_DELIVERY_LicenseBackPhotoUrl
 } from "../types";
 
 const initialState = {
   authenticated: false,
+  phone: "",
   loading: false,
   account: {},
   name: "",
@@ -24,6 +28,10 @@ const initialState = {
   _id: "",
   firstName: "",
   lastName: "",
+  PortraitPhotoUrl:"",
+  LicenseFrontPhotoUrl:"",
+  LicenseBackPhotoUrl:"",
+  CCCD:""
 };
 
 export default function userReducer(state = initialState, action) {
@@ -52,6 +60,24 @@ export default function userReducer(state = initialState, action) {
         loading: false,
         items: [...state.items, action.payload],
       };
+    case SET_DELIVERY_PortraitPhotoUrl:
+      return {
+        ...state,
+        loading: false,
+        PortraitPhotoUrl:action.payload
+      }
+    case SET_DELIVERY_LicenseFrontPhotoUrl:
+      return {
+        ...state,
+        loading: false,
+        LicenseFrontPhotoUrl:action.payload
+      }
+    case SET_DELIVERY_LicenseBackPhotoUrl:
+      return {
+        ...state,
+        loading:false,
+        LicenseBackPhotoUrl:action.payload
+      }
     case DELETE_ITEM:
       return {
         ...state,

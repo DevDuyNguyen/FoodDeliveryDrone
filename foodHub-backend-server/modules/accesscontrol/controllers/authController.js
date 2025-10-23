@@ -8,6 +8,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Account = require("../models/account");
 const Seller = require("../models/seller");
+const Delivery = require("../models/deliveryPartner");
+const DeliveryDetail = require("../../Delivery/models/deliveryDetail");
 // NOT Done (học sendgrid)
 // const transporter = nodemailer.createTransport(
 //   sendgridTransport({
@@ -82,6 +84,110 @@ exports.signupUser = (req, res, next) => {
       });
     })
     .catch((err) => {
+      if (!err.statusCode) err.statusCode = 500;
+      next(err);
+    });
+};
+
+// Giả định các module sau đã được import ở đầu file:
+// const { validationResult } = require('express-validator');
+// const bcrypt = require('bcryptjs'); // hoặc 'bcrypt'
+// const crypto = require('crypto');
+// const DeliveryPartner = require('./path/to/DeliveryPartnerModel');
+
+// Lưu ý: Đảm bảo bạn đã import các thư viện cần thiết:
+// const { validationResult } = require('express-validator');
+// const bcrypt = require('bcryptjs');
+// const crypto = require('crypto');
+// const DeliveryPartner = require('../models/deliveryPartner'); // Giả định
+// const Account = require('../models/account'); // Giả định
+
+exports.signUpDeliveryPartner = (req, res, next) => {
+  // 1. XỬ LÝ LỖI XÁC THỰC (VALIDATION)
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = new Error("Validation Failed, Incorrect data entered.");
+    console.log(errors.array());
+
+    error.statusCode = 422; // Unprocessable Entity
+    error.errors = errors.array();
+    return next(error);
+  }
+
+  // 2. KIỂM TRA VÀ TRÍCH XUẤT DỮ LIỆU TỪ BODY VÀ FILES
+
+  // Khi dùng upload.fields(), req.files là một object, không phải mảng.
+  // Tên trường phải khớp với định nghĩa trong auth.js: 'portrait', 'licenseFront', 'licenseBack'
+  const files = req.files;
+
+  // Kiểm tra xem 3 trường file có tồn tại không
+  if (!files || !files.portrait || !files.licenseFront || !files.licenseBack) {
+    const error = new Error(
+      "Vui lòng tải lên đủ 3 ảnh: Chân dung, Giấy phép trước, Giấy phép sau."
+    );
+    error.statusCode = 422;
+    return next(error);
+  }
+
+  // TRÍCH XUẤT DỮ LIỆU TỪ BODY
+  const email = req.body.email;
+  const password = req.body.password;
+  const phone = req.body.phone;
+  const firstName = req.body.firstName; // SỬA: Dùng key 'FirstName' theo client
+  const lastName = req.body.lastName; // SỬA: Dùng key 'LastName' theo client
+  const CCCD = req.body.CCCD;
+  // TRÍCH XUẤT PATH TỪ req.files (LƯU Ý: mỗi trường là một mảng 1 phần tử)
+  const portraitPhotoUrl = files.portrait[0].path;
+  const licenseFrontPhotoUrl = files.licenseFront[0].path;
+  const licenseBackPhotoUrl = files.licenseBack[0].path;
+
+  let token;
+  const role = "ROLE_DELIVERY"; // Đặt vai trò cố định cho Delivery Partner
+
+  // 3. BĂM MẬT KHẨU VÀ LƯU DỮ LIỆU
+  bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      token = crypto.randomBytes(32).toString("hex");
+
+      // TẠO VÀ LƯU ĐỐI TƯỢNG ACCOUNT
+      const account = new Account({
+        role: role,
+        email: email,
+        password: hashedPassword,
+        accountVerifyToken: token,
+        accountVerifyTokenExpiration: Date.now() + 3600000,
+        isVerified: false,
+      });
+      return account.save();
+    })
+    .then((savedAccount) => {
+      // TẠO VÀ LƯU ĐỐI TÁC GIAO HÀNG, LIÊN KẾT VỚI ACCOUNT VỪA TẠO
+      const deliveryPartners = new Delivery({
+        phone: phone,
+        firstName: firstName,
+        lastName: lastName,
+        CCCD:CCCD,
+        // LƯU CÁC PATH/URL ĐÃ LẤY TỪ req.files
+        portraitPhotoUrl: portraitPhotoUrl,
+        licenseFrontPhotoUrl: licenseFrontPhotoUrl,
+        licenseBackPhotoUrl: licenseBackPhotoUrl,
+
+        account: savedAccount,
+      });
+      return deliveryPartners.save();
+    })
+    .then((savedPartner) => {
+      // 4. PHẢN HỒI THÀNH CÔNG
+      res.status(201).json({
+        message:
+          "Delivery Partner signed-up successfully. Verification process pending.",
+        partnerId: savedPartner._id,
+      });
+    })
+    .catch((err) => {
+      // 5. XỬ LÝ LỖI CHUNG
       if (!err.statusCode) err.statusCode = 500;
       next(err);
     });

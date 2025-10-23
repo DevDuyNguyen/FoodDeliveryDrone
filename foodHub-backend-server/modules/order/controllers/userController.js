@@ -9,6 +9,7 @@ const Account = require("../../accesscontrol/models/account");
 const Order = require("../../order/models/order");
 const io = require("../../../util/socket");
 const app = require("../../../app");
+const DeliveryPartner = require("../../accesscontrol/models/deliveryPartner");
 
 exports.getRestaurants = (req, res, next) => {
   Seller.find()
@@ -244,6 +245,7 @@ exports.getLoggedInUser = (req, res, next) => {
   const accountId = decodedToken.accountId;
   let accountObj;
   let sellerObj;
+  console.log("Account id", accountId);
 
   Account.findById(accountId)
     .then((account) => {
@@ -265,6 +267,16 @@ exports.getLoggedInUser = (req, res, next) => {
         return Seller.findOne({ account: accountObj._id })
           .populate("items")
           .populate({ path: "account", select: ["email", "role"] });
+      }
+    })
+    .then((seller) => {
+      if (seller) {
+        return seller;
+      } else {
+        return DeliveryPartner.findOne({ account: accountObj._id }).populate({
+          path: "account",
+          select: ["email", "role"],
+        });
       }
     })
     .then((result) => {

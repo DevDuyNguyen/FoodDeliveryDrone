@@ -27,3 +27,6 @@ export const SET_UNAUTHENTICATED = "SET_UNAUTHENTICATED";
 export const ADD_ITEM = "ADD_ITEM";
 export const DELETE_ITEM = "DELETE_ITEM";
 export const EDIT_ITEM = "EDIT_ITEM";
+export const SET_DELIVERY_PortraitPhotoUrl = "SET_DELIVERY_PortraitPhotoUrl";
+export const SET_DELIVERY_LicenseFrontPhotoUrl = "SET_DELIVERY_LicenseFrontPhotoUrl";
+export const SET_DELIVERY_LicenseBackPhotoUrl= "SET_DELIVERY_LicenseFrontPhotoUrl";
