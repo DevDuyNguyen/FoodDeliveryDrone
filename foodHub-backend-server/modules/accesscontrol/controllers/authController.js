@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Account = require("../models/account");
 const Seller = require("../models/seller");
-const Delivery = require("../models/deliveryPartner");
+const DeliveryPartner = require("../models/deliveryPartner");
 const DeliveryDetail = require("../../Delivery/models/deliveryDetail");
 // NOT Done (học sendgrid)
 // const transporter = nodemailer.createTransport(
@@ -158,13 +158,13 @@ exports.signUpDeliveryPartner = (req, res, next) => {
         password: hashedPassword,
         accountVerifyToken: token,
         accountVerifyTokenExpiration: Date.now() + 3600000,
-        isVerified: false,
+        isVerified: true,
       });
       return account.save();
     })
     .then((savedAccount) => {
       // TẠO VÀ LƯU ĐỐI TÁC GIAO HÀNG, LIÊN KẾT VỚI ACCOUNT VỪA TẠO
-      const deliveryPartners = new Delivery({
+      const deliveryPartners = new DeliveryPartner({
         phone: phone,
         firstName: firstName,
         lastName: lastName,

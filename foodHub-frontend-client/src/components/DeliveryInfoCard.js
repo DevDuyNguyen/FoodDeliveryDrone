@@ -43,7 +43,7 @@ const DeliveryInfoCard = () => {
   const classes = useStyles();
 
   // Lấy dữ liệu từ Redux state (giả định từ state.auth)
-  let { licenseBackPhotoUrl, licenseFrontPhotoUrl, firstName, lastName, email, phone,CCCD } = useSelector((state) => state.auth);
+  let { licenseBackPhotoUrl, licenseFrontPhotoUrl, firstName, lastName, account:{email}, phone, CCCD } = useSelector((state) => state.auth);
   licenseBackPhotoUrl = licenseBackPhotoUrl.replace(/\\/g, "/");
   licenseBackPhotoUrl = process.env.REACT_APP_SERVER_URL + "/" + licenseBackPhotoUrl;
   licenseFrontPhotoUrl = licenseFrontPhotoUrl.replace(/\\/g, "/");

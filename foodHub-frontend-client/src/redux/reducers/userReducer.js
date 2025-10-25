@@ -31,6 +31,7 @@ const initialState = {
   PortraitPhotoUrl:"",
   LicenseFrontPhotoUrl:"",
   LicenseBackPhotoUrl:"",
+  email:"",
   CCCD:""
 };
 
