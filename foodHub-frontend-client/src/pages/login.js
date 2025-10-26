@@ -39,6 +39,8 @@ export default function Login() {
   const history = useHistory();
 
   const loginHandle = (props) => {
+    console.log("loginHandle()");
+    
     const userData = {
       email: inputs.email,
       password: inputs.password,

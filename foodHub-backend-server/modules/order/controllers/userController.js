@@ -1,6 +1,9 @@
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 var mongoose = require("mongoose");
+const path=require("path");
+const dotenv=require("dotenv");
+dotenv.config(path.join(__dirname, ".env"));
 
 const Seller = require("../../accesscontrol/models/seller");
 const Item = require("../../menu/models/item");
@@ -10,6 +13,14 @@ const Order = require("../../order/models/order");
 const io = require("../../../util/socket");
 const app = require("../../../app");
 const DeliveryPartner = require("../../accesscontrol/models/deliveryPartner");
+
+//socket
+const DeliveyPartnerSocketMap=require("../../../socket/sources/DeliveryPartnerSource");
+const {getIO}=require("../../../util/socket");
+const {getObjectNearAPlace}=require("../../../util/delivery");
+const order = require("../../order/models/order");
+const deliveryPartnerMap = require("../../../socket/sources/DeliveryPartnerSource");
+const deliveryAssignmentMap=require("../../../socket/sources/DeliveryAssignmentMap");
 
 exports.getRestaurants = (req, res, next) => {
   Seller.find()
@@ -407,6 +418,66 @@ exports.getOrders = (req, res, next) => {
     });
 };
 
+//HERE HERE HERE HERE
+const selectNextSuitableDeliveryPartner=(orderId)=>{
+  //find order information
+  let order=Order
+      .findById(orderId)
+      .populate({
+        path:"seller.sellerId",
+        select:"address"
+      })
+      .then(order=>{
+        //find suitable delivery partner
+        let ans=getObjectNearAPlace({
+            lng:order.seller.sellerId.address.lng,
+            lat:order.seller.sellerId.address.lat
+          }, Array.from(deliveryPartnerMap.entries()).map(([id, info])=>{
+              return {
+                id:id,
+                pos:info.location
+              }
+            }
+          )
+        );
+        console.log("Suitable driver:", ans);
+        //check if this order is assgined before
+        let deliveryAssignment=deliveryAssignmentMap.get(orderId);
+        if(!deliveryAssignment){
+          deliveryAssignmentMap.set(orderId, {
+              accountId:ans.id,
+              timeout:setTimeout(() => {
+                selectNextSuitableDeliveryPartner(orderId);
+              }, process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY),
+              count:0
+          });
+        }
+        else{
+          if(deliveryAssignment.count>process.env.MAX_ASSIGNMENT_ATTEMP){
+            //[not done]cancel order, cause found no suitable delivery partner
+            console.log(`order ${orderId} will be cancelled, cause found no suitable delivery partner`);
+            deliveryAssignmentMap.delete(orderId);
+            return;
+          }
+          deliveryAssignmentMap.set(orderId, {
+              accountId:ans.id,
+              timeout:setTimeout(() => {
+                selectNextSuitableDeliveryPartner(orderId);
+              }, process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY),
+              count:++deliveryAssignment.count
+          });         
+        }
+        const deliveryPartnerSocket=deliveryPartnerMap.get(ans.id).socketId;
+        const io=getIO();
+        io.to(deliveryPartnerSocket).emit("delivery:job_notification",{
+          orderId:orderId,
+          timeout:process.env.DELIVERY_JOB_ACCEPT_TIMEOUT
+        });
+
+      });
+
+}
+
 exports.postOrderStatus = (req, res, next) => {
   const authHeader = req.get("Authorization");
   if (!authHeader) {
@@ -453,6 +524,9 @@ exports.postOrderStatus = (req, res, next) => {
     })
     .then((updatedOrder) => {
       io.getIO().emit("orders", { action: "update", order: updatedOrder });
+      if(status=="Ready"){
+        selectNextSuitableDeliveryPartner(orderId);
+      }
       res.status(200).json({ updatedOrder });
     })
     .catch((err) => {

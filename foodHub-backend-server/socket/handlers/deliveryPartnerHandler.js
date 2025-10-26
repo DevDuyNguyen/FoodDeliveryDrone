@@ -28,22 +28,26 @@ exports.registerDeliveryPartner=()=>{
             })
     })
 }
+let time=0;
 
 exports.trackDeliveryPartnerLocation=()=>{
     const io=getIO();
     io.on("connection", (socket)=>{
-        socket.on("deliveryPartner:updateLocation", async ({jwt, location})=>{
+        socket.on("deliveryPartner:updateLocation", async ({jwt, location, socketId})=>{
             try {
+                // console.log("data",data1);
                 console.log("updateLocation()");
+                console.log("time", time++);
                 
                 const {status, data}=await verifyJWT(jwt);
-                if(stats=="error")
+                if(status=="error")
                     return;
-                let info=deliveryPartnerMap.get(data.accountId);
-                if(info)
+                let DeliveryPartnerSocketInfo=deliveryPartnerMap.get(data.accountId);
+                if(DeliveryPartnerSocketInfo)
                 {
-                    info["location"]=location;
-                    console.log("deliveryPartnerMap", deliveryPartnerMap(info.accountId));
+                    DeliveryPartnerSocketInfo["location"]=location;
+                    DeliveryPartnerSocketInfo["socketId"]=socketId;
+                    console.log("deliveryPartnerMap", deliveryPartnerMap.get(data.accountId));
                 }
             } catch (error) {
                 console.log("updateLocation", error);

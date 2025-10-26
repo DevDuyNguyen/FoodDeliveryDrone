@@ -17,7 +17,12 @@ import {
 import { useSelector } from "react-redux";
 import axios from "../../util/axios";
 import axiosNewInstance from "axios";
-import {registerDeliveryPartnerSocket, updateDeliveryPartnerLocation} from "../../socket/deliveryHandler";
+import {registerDeliveryPartnerSocket, 
+        updateDeliveryPartnerLocation,
+        JobNotification} from "../../socket/deliveryHandler";
+
+
+import {initSocket, getSocket} from "../../socket/socket";
 
 export const signupUser = (newUserData, history) => (dispatch) => {
   dispatch({ type: LOADING_UI });
@@ -53,6 +58,25 @@ export const loginAction = (userData, history) => (dispatch) => {
       const jwt = `Bearer ${res.data.token}`;
       localStorage.setItem("jwt", jwt);
       axios.defaults.headers.common["Authorization"] = jwt;
+      axios
+      .get("/user")
+      .then((res) => {
+        console.log("user", res.data.result);
+        if(res.data.result.account.role == 'ROLE_DELIVERY'){
+
+          //configure socket for delivery partner
+          console.log("loginAction()");
+          
+          const socket=initSocket(process.env.REACT_APP_SERVER_URL);
+          socket.on("connect", ()=>{
+            console.log("configure socket for delivery partner");
+            registerDeliveryPartnerSocket();
+            updateDeliveryPartnerLocation();
+            JobNotification();
+          });
+        } 
+      })
+
       dispatch(getUserData());
       dispatch({ type: CLEAR_ERRORS });
       history.push("/");
@@ -83,12 +107,6 @@ export const getUserData = () => (dispatch) => {
         payload: res.data.result,
       });
       if(res.data.result.account.role == 'ROLE_DELIVERY'){
-
-        //configure socket for delivery partner
-        console.log("configure socket for delivery partner");
-        registerDeliveryPartnerSocket();
-        updateDeliveryPartnerLocation();
-
         dispatch({
           type: SET_DELIVERY_PortraitPhotoUrl,
           payload: res.data.result.portraitPhotoUrl

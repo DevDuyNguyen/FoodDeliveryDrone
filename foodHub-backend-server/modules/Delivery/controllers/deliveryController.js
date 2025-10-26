@@ -4,13 +4,22 @@ const User = require("../../accesscontrol/models/user");
 const Account = require("../../accesscontrol/models/account");
 const Seller = require("../../accesscontrol/models/seller");
 const DeliveryDetail = require("../models/deliveryDetail");
+const { promisify } = require('node:util');
+const jwt=require("jsonwebtoken");
+const path=require("path");
+
+const dotenv=require("dotenv");
+dotenv.config(path.join(__dirname, ".env"));
+
+//socket
+const deliveryAssignmentMap=require("../../../socket/sources/DeliveryAssignmentMap");
 
 /**
  * Middleware để lấy thông tin chi tiết đầy đủ về một DeliveryPartner
  * bao gồm Account, DeliveryDetails, Order, User, Seller và Items,
  * sử dụng phương thức GET (accountId được truyền qua req.params).
  */
-const createDeliveryDetailMiddleware = async (req, res, next) => {
+exports.createDeliveryDetailMiddleware = async (req, res, next) => {
   // 1. Kiểm tra lỗi xác thực (nếu bạn sử dụng express-validator cho body)
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -76,7 +85,7 @@ const createDeliveryDetailMiddleware = async (req, res, next) => {
   }
 };
 
-const getFullDeliveryChainMiddleware = async (req, res, next) => {
+exports.getFullDeliveryChainMiddleware = async (req, res, next) => {
   // Kiểm tra lỗi xác thực từ express-validator
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -143,7 +152,33 @@ const getFullDeliveryChainMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  getFullDeliveryChainMiddleware,
-  createDeliveryDetailMiddleware,
-};
+exports.acceptDeliveryJob=async (req, res, next)=>{
+  try{
+    const {jwtToken, orderId}=req.body;
+    const decodedJWT=await promisify(jwt.verify)(jwtToken, process.env.JWT_SECRET_KEY);
+    if(deliveryAssignmentMap.get(orderId).accountId!=decodedJWT.accountId){
+      return res.status(400).json({
+        status:"fail",
+        mess:`There is no order ${orderId} assigned to account ${decodedJWT.accountId}`
+      });
+    }
+    else{
+      clearTimeout(deliveryAssignmentMap.get(orderId).timeout);
+      let deliveryDetail=DeliveryDetail.create({
+        order:orderId,
+        endTime:new Date(),
+        deliveryCharge:0,//[not done: get actual delivery charge]
+        DeliveryPartnerId:decodedJWT.accountId,
+      });
+      res.status(200).json({
+        status:"ok",
+        data:DeliveryDetail
+      });
+    }
+
+  }
+  catch(error){
+    next(error, req, res, next);
+  }
+}
+

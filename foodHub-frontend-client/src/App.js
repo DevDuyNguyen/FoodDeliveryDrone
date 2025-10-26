@@ -68,7 +68,6 @@ if (token) {
 
 function App() {
   console.log("App");
-
   return (
     <MuiThemeProvider theme={theme}>
       <Provider store={store}>
