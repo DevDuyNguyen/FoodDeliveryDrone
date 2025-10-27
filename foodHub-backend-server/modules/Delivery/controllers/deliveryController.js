@@ -12,7 +12,16 @@ const dotenv=require("dotenv");
 dotenv.config(path.join(__dirname, ".env"));
 
 //socket
+const DeliveyPartnerSocketMap=require("../../../socket/sources/DeliveryPartnerSource");
+const {getIO}=require("../../../util/socket");
+const {getObjectNearAPlace}=require("../../../util/delivery");
+const order = require("../../order/models/order");
+const deliveryPartnerMap = require("../../../socket/sources/DeliveryPartnerSource");
 const deliveryAssignmentMap=require("../../../socket/sources/DeliveryAssignmentMap");
+
+//delivery
+const {selectNextSuitableDeliveryPartner}= require("../../order/controllers/userController");
+
 
 /**
  * Middleware để lấy thông tin chi tiết đầy đủ về một DeliveryPartner
@@ -164,7 +173,18 @@ exports.acceptDeliveryJob=async (req, res, next)=>{
     }
     else{
       clearTimeout(deliveryAssignmentMap.get(orderId).timeout);
-      let deliveryDetail=await DeliveryDetail.create({
+      //check if order is assigned
+      let deliveryDetail= await DeliveryDetail.findOne({
+        order:orderId
+      });
+      if(deliveryDetail){
+        return res.status(400).json({
+          status:"fail",
+          mess:`order ${orderId} is already assigned`
+        });
+      }
+
+      deliveryDetail=await DeliveryDetail.create({
         order:orderId,
         deliveryCharge:0,//[not done: get actual delivery charge in backend]
         DeliveryPartnerId:decodedJWT.accountId,
@@ -185,7 +205,8 @@ exports.acceptDeliveryJob=async (req, res, next)=>{
       deliveryDetail.order.items=null;
       deliveryDetail.totalItemMoney=totalItemMoney;
       // deliveryDetail.aaa="aaa"
-      res.status(200).json({
+      deliveryAssignmentMap.delete(orderId);
+      return res.status(200).json({
         status:"ok",
         data:deliveryDetail
       });
@@ -197,3 +218,27 @@ exports.acceptDeliveryJob=async (req, res, next)=>{
   }
 }
 
+exports.refuseDeliveryJob=async (req, res, next)=>{
+  try {
+    const {jwtToken, orderId}=req.body;
+    const decodedJWT=await promisify(jwt.verify)(jwtToken, process.env.JWT_SECRET_KEY);
+    if(deliveryAssignmentMap.get(orderId).accountId!=decodedJWT.accountId){
+      return res.status(400).json({
+        status:"fail",
+        mess:`There is no order ${orderId} assigned to account ${decodedJWT.accountId}`
+      });
+    }
+    else{
+      clearTimeout(deliveryAssignmentMap.get(orderId).timeout);
+      let deliveryAssignmentInfo=deliveryAssignmentMap.get(orderId);
+      deliveryAssignmentInfo.refuser.push(decodedJWT.accountId);
+      selectNextSuitableDeliveryPartner(orderId);
+      res.status(200).json({
+        status:"ok",
+        data:"1"//received refuse request
+      });
+    }
+  } catch (error) {
+    next(error, req, res, next);
+  }
+}

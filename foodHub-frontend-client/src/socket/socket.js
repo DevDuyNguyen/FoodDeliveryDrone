@@ -9,7 +9,7 @@ export function initSocket(serverURL){
     console.log("Connect delivery partner socket");
     
     socket=io(serverURL,{
-        pingTimeout:10000
+        pingTimeout:process.env.PING_TIMEOUT*1000
     });
     socket.on("connect", ()=>{
         console.log("debug test hello connection");

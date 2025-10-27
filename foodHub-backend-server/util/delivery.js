@@ -3,7 +3,7 @@ const haversine = require('haversine-distance')
 /* 
 input:
 -origin: {lng, lat}
--deliverPartnerLocations:[{
+-objectLocations:[{
     id: object Id,
     pos:{
         lng.
@@ -15,9 +15,10 @@ output:
 -ans:{
     id: suitable object id,
     dist: dist form the selected object to the origin
-} 
+},
+-excludeObjectId:[] //object Id to exclude
 */
-exports.getObjectNearAPlace=(origin, objectLocations, acceptRange)=>{
+exports.getObjectNearAPlace=(origin, objectLocations, acceptRange, excludeObjectId=[])=>{
     console.log("getObjectNearAPlace()");
     console.log("input:", objectLocations);
     if(!objectLocations.length){
@@ -31,6 +32,11 @@ exports.getObjectNearAPlace=(origin, objectLocations, acceptRange)=>{
     if(ans.dist<=acceptRange)
         return ans;
     for(let obj of objectLocations){
+        for(let obj of objectLocations){
+            if(excludeObjectId.includes(obj.id))
+                continue;
+        }
+
         dist=haversine(origin, obj.pos)/1000;
         if(dist<=acceptRange)
             return {

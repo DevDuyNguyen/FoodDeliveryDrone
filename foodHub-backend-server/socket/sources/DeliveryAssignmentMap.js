@@ -1,9 +1,11 @@
 /*
 orderId->{
     accountId of delivery partner:,
-    timeout:Js timeout
+    timeout:Js timeout,
+    count: how many time this order is assigned,
+    refuser:[accountId]
 }
 */
-let deliverAssignmentMap=new Map();
+let deliveryAssignmentMap=new Map();
 
-module.exports=deliverAssignmentMap
+module.exports=deliveryAssignmentMap

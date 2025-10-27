@@ -1,0 +1,29 @@
+/*
+input:
+-deliveryJobDetail:{
+    delivery charge:,
+    totalItemMoney:,
+    sellerAddress:{
+        formattedAddress:,
+        pos:{
+            lng:,
+            lat
+        }
+    }
+    userAddress:{
+        formattedAddress:,
+        pos:{
+            lng:,
+            lat
+        }
+    }
+}
+*/
+export function setDeliveryJobNotification(deliveryJobDetail){
+    return{
+        type:"setDeliveryJobNotification",
+        payload:{
+            deliveryJobDetail
+        }
+    }
+}

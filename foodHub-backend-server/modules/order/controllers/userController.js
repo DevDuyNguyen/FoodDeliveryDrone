@@ -419,7 +419,7 @@ exports.getOrders = (req, res, next) => {
 };
 
 //HERE HERE HERE HERE
-const selectNextSuitableDeliveryPartner=(orderId)=>{
+function selectNextSuitableDeliveryPartner(orderId){
   //find order information
   let order=Order
       .findById(orderId)
@@ -429,6 +429,7 @@ const selectNextSuitableDeliveryPartner=(orderId)=>{
       })
       .then(order=>{
         //find suitable delivery partner
+        let deliveryAssignment=deliveryAssignmentMap.get(orderId);
         let ans=getObjectNearAPlace({
             lng:order.seller.sellerId.address.lng,
             lat:order.seller.sellerId.address.lat
@@ -438,17 +439,17 @@ const selectNextSuitableDeliveryPartner=(orderId)=>{
                 pos:info.location
               }
             }
-          )
+          ),
+          (deliveryAssignment)?deliveryAssignment.refuser:[]
         );
         console.log("Suitable driver:", ans);
         //check if this order is assgined before
-        let deliveryAssignment=deliveryAssignmentMap.get(orderId);
         if(!deliveryAssignment){
           deliveryAssignmentMap.set(orderId, {
               accountId:ans.id,
               timeout:setTimeout(() => {
                 selectNextSuitableDeliveryPartner(orderId);
-              }, process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY),
+              }, (process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY)*1000),
               count:0
           });
         }
@@ -459,13 +460,12 @@ const selectNextSuitableDeliveryPartner=(orderId)=>{
             deliveryAssignmentMap.delete(orderId);
             return;
           }
-          deliveryAssignmentMap.set(orderId, {
-              accountId:ans.id,
-              timeout:setTimeout(() => {
+          deliveryAssignment.accountId=ans.id;
+          deliveryAssignment.timeout=setTimeout(() => {
                 selectNextSuitableDeliveryPartner(orderId);
-              }, process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY),
-              count:++deliveryAssignment.count
-          });         
+              }, (process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY)*1000
+            );
+          deliveryAssignment.count+=1;       
         }
         const deliveryPartnerSocket=deliveryPartnerMap.get(ans.id).socketId;
         const io=getIO();
@@ -477,6 +477,7 @@ const selectNextSuitableDeliveryPartner=(orderId)=>{
       });
 
 }
+exports.selectNextSuitableDeliveryPartner=selectNextSuitableDeliveryPartner;
 
 exports.postOrderStatus = (req, res, next) => {
   const authHeader = req.get("Authorization");
