@@ -8,4 +8,5 @@ router.get("/getOrderDetail/:accountId", deliveryControllers.getFullDeliveryChai
 router.post('/create-detail', deliveryControllers.createDeliveryDetailMiddleware);
 router.post("/accept-delivery-job", deliveryControllers.acceptDeliveryJob);
 router.post("/getJobDeliveryNotificationDetail", deliveryControllers.getJobDeliveryNotificationDetail);
+router.post("/refuseDeliveryJob", deliveryControllers.refuseDeliveryJob);
 module.exports = router;

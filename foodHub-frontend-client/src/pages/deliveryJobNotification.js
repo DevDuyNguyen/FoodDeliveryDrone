@@ -2,11 +2,24 @@ import { useDispatch, useSelector } from "react-redux"
 import React from "react"
 import { useEffect } from "react";
 import axios from "axios";
+import store from "../redux/store";
+import {removeDeliveryJobNotification} from '../redux/actions/deliveryActions';
+import {historyReactRouterObj} from "../components/ReactRouterHistoryProvider";
+
 function onAcceptJob(event){
     //[not done]
 }
-function onRefuseJob(event){
-    //[not done]
+async function onRefuseJob(orderId){
+    let result=await axios.post(`${process.env.REACT_APP_SERVER_URL}/delivery/refuseDeliveryJob`,{
+        jwtToken:localStorage.getItem("jwt").split(" ")[1],
+        orderId:orderId
+    });
+    if(result.data.status=="ok"){
+        console.log("refuse delivery job success");
+        
+        store.dispatch(removeDeliveryJobNotification());
+        historyReactRouterObj.push("/");
+    }
 }
 
 const DeliveryJobNotification=(props)=>{
@@ -14,6 +27,7 @@ const DeliveryJobNotification=(props)=>{
     let totalItemMoney=useSelector(state=>state.deliveryData.totalItemMoney);
     let sellerAddress=useSelector(state=>state.deliveryData.sellerAddress);
     let customerAddress=useSelector(state=>state.deliveryData.customerAddress);
+    let orderId=useSelector(state=>state.deliveryData.orderId);
     
     useSelector(state=>console.log("delivery data state:",state.deliveryData));
 
@@ -84,7 +98,7 @@ const DeliveryJobNotification=(props)=>{
             <p>Distance to seller:{sellerDistance.distance.text}</p>
             <p>Customer address: {customerAddress.formattedAddress}</p>
             <p>Distance to customer: {customerDistance.distance.text}</p>
-            <button>No</button>
+            <button onClick={()=>onRefuseJob(orderId)}>No</button>
             <button>Yes</button>
         </div>
         // <div>

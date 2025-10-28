@@ -283,7 +283,8 @@ exports.getJobDeliveryNotificationDetail=async(req, res, next)=>{
                   lng:null,
                   lat:null
               }
-          }
+          },
+          orderId:null
       };
       let sellerDistance={
           "distance": {
@@ -305,7 +306,8 @@ exports.getJobDeliveryNotificationDetail=async(req, res, next)=>{
               "value": null
           }
       };
-            //get seller address
+      ans.orderId=orderId;
+      //get seller address
       ans.sellerAddress.formattedAddress=order.seller.sellerId.formattedAddress;
       ans.sellerAddress.pos.lat=order.seller.sellerId.address.lat;
       ans.sellerAddress.pos.lng=order.seller.sellerId.address.lng;

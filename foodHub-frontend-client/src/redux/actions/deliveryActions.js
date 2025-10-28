@@ -9,14 +9,15 @@ input:
             lng:,
             lat
         }
-    }
+    },
     customerAddress:{
         formattedAddress:,
         pos:{
             lng:,
             lat
         }
-    }
+    },
+    orderId:
 }
 */
 export function setDeliveryJobNotification(deliveryJobDetail){
@@ -27,5 +28,10 @@ export function setDeliveryJobNotification(deliveryJobDetail){
         payload:{
             ...deliveryJobDetail
         }
+    }
+}
+export function removeDeliveryJobNotification(){
+    return{
+        type:"removeDeliveryJobNotification"
     }
 }

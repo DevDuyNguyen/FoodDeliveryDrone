@@ -440,6 +440,7 @@ function selectNextSuitableDeliveryPartner(orderId){
               }
             }
           ),
+          10,
           (deliveryAssignment)?deliveryAssignment.refuser:[]
         );
         if(!ans){
@@ -461,7 +462,8 @@ function selectNextSuitableDeliveryPartner(orderId){
               timeout:setTimeout(() => {
                 selectNextSuitableDeliveryPartner(orderId);
               }, (parseInt(process.env.DELIVERY_JOB_ACCEPT_TIMEOUT)+2*parseInt(process.env.NETWORK_DELAY))*1000),
-              count:0
+              count:0,
+              refuser:[]
           });
         }
         else{

@@ -6,15 +6,15 @@ const initialState=
     sellerAddress:{
         formattedAddress:null,
         pos:{
-            lat:10.779425388347109,
-            lng:106.6845684601324
+            lat:null,
+            lng:null
         }
     },
     customerAddress:{
         formattedAddress:null,
         pos:{
-            lat:10.779425388347109,
-            lng:106.6845684601324
+            lat:null,
+            lng:null
         }
     }
 }
@@ -31,6 +31,8 @@ export default function deliveryDataReducer(state=initialState, action){
                 ...(action.payload)
             };
             break;
+        case "removeDeliveryJobNotification":
+            return initialState
         default:
             return state;
     }

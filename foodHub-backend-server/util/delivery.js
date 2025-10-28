@@ -26,16 +26,12 @@ exports.getObjectNearAPlace=(origin, objectLocations, acceptRange, excludeObject
     }
     
     let ans={
-        id:objectLocations[0].id,
-        dist: haversine(origin, objectLocations[0].pos)/1000
+        id:null,
+        dist: Number.MAX_SAFE_INTEGER
     }
-    if(ans.dist<=acceptRange)
-        return ans;
     for(let obj of objectLocations){
-        for(let obj of objectLocations){
-            if(excludeObjectId.includes(obj.id))
-                continue;
-        }
+        if(excludeObjectId.includes(obj.id))
+            continue;
 
         dist=haversine(origin, obj.pos)/1000;
         if(dist<=acceptRange)
@@ -48,7 +44,7 @@ exports.getObjectNearAPlace=(origin, objectLocations, acceptRange, excludeObject
             ans.dist=dist;
         }
     }
-    return ans;
+    return (ans.id)?ans:null;
 }
 
 /*
