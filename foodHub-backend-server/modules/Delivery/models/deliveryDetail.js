@@ -20,6 +20,7 @@ const DeliveryDetailSchema = new Schema({
   endTime: {
     type: Date, // Date trong Mongoose tương đương với timestamp
     required: false,
+    default:null
   },
 
   // Tương ứng với trường deliveryCharge (double)

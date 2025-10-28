@@ -442,14 +442,25 @@ function selectNextSuitableDeliveryPartner(orderId){
           ),
           (deliveryAssignment)?deliveryAssignment.refuser:[]
         );
+        if(!ans){
+          if(deliveryAssignment){
+            deliveryAssignment.count+1;
+          }
+          else{
+            deliveryAssignmentMap.set(orderId,{
+              count:0
+            })
+          }
+          return selectNextSuitableDeliveryPartner();
+        }
         console.log("Suitable driver:", ans);
         //check if this order is assgined before
         if(!deliveryAssignment){
           deliveryAssignmentMap.set(orderId, {
-              accountId:ans.id,
+              accountId:(ans)?ans.id:null,
               timeout:setTimeout(() => {
                 selectNextSuitableDeliveryPartner(orderId);
-              }, (process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY)*1000),
+              }, (parseInt(process.env.DELIVERY_JOB_ACCEPT_TIMEOUT)+2*parseInt(process.env.NETWORK_DELAY))*1000),
               count:0
           });
         }
@@ -460,10 +471,10 @@ function selectNextSuitableDeliveryPartner(orderId){
             deliveryAssignmentMap.delete(orderId);
             return;
           }
-          deliveryAssignment.accountId=ans.id;
+          deliveryAssignment.accountId=(ans)?ans.id:null;
           deliveryAssignment.timeout=setTimeout(() => {
                 selectNextSuitableDeliveryPartner(orderId);
-              }, (process.env.DELIVERY_JOB_ACCEPT_TIMEOUT+2*process.env.NETWORK_DELAY)*1000
+              }, (parseInt(process.env.DELIVERY_JOB_ACCEPT_TIMEOUT)+2*parseInt(process.env.NETWORK_DELAY))*1000
             );
           deliveryAssignment.count+=1;       
         }

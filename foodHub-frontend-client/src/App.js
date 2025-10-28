@@ -44,10 +44,12 @@ import cart from "./pages/cart";
 import orders from "./pages/orders";
 import profile from "./pages/profile";
 import Invoice from "./pages/Invoice";
+import DeliveryJobNotification from "./pages/DeliveryJobNotification";
+import ReactRouterHistoryProvider from "./components/ReactRouterHistoryProvider";
 
-//socket
-import {initSocket, getSocket} from "./socket/socket"
-const io=initSocket(process.env.REACT_APP_SERVER_URL);
+// //socket
+// import {initSocket, getSocket} from "./socket/socket"
+// const io=initSocket(process.env.REACT_APP_SERVER_URL);
 
 const theme = createMuiTheme(themeFile);
 
@@ -72,6 +74,7 @@ function App() {
     <MuiThemeProvider theme={theme}>
       <Provider store={store}>
         <Router>
+          <ReactRouterHistoryProvider />
           <AppBar />
           <ScrollToTop />
           <Switch>
@@ -91,6 +94,9 @@ function App() {
             <UserRoute exact path="/cart" component={cart} />
             <UserRoute exact path="/orders" component={orders} />
             <SellerRoute exact path="/seller/orders" component={orders} />
+            <Route exact path="/deliveryJobNotification">
+              <DeliveryJobNotification />
+            </Route>
             <Route component={error404} />
           </Switch>
           <Footer />

@@ -7,7 +7,11 @@ let io;
 module.exports = {
   init: (httpServer) => {
     io = require("socket.io")(httpServer,{
-      pingTimeout: process.env.PING_TIMEOUT*1000
+      pingTimeout: process.env.PING_TIMEOUT*1000,
+      connectionStateRecovery: {
+        maxDisconnectionDuration:2*60*1000,
+        skipMiddlewares: true
+      }
     });
 
     io.on("connection", (socket)=>{

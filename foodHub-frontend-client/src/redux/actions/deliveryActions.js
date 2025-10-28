@@ -1,7 +1,7 @@
 /*
 input:
 -deliveryJobDetail:{
-    delivery charge:,
+    deliveryCharge:,
     totalItemMoney:,
     sellerAddress:{
         formattedAddress:,
@@ -10,7 +10,7 @@ input:
             lat
         }
     }
-    userAddress:{
+    customerAddress:{
         formattedAddress:,
         pos:{
             lng:,
@@ -20,10 +20,12 @@ input:
 }
 */
 export function setDeliveryJobNotification(deliveryJobDetail){
+    console.log("setDeliveryJobNotification()");
+    
     return{
         type:"setDeliveryJobNotification",
         payload:{
-            deliveryJobDetail
+            ...deliveryJobDetail
         }
     }
 }

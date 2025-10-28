@@ -7,4 +7,5 @@ const deliveryControllers = require('../controllers/deliveryController');
 router.get("/getOrderDetail/:accountId", deliveryControllers.getFullDeliveryChainMiddleware);
 router.post('/create-detail', deliveryControllers.createDeliveryDetailMiddleware);
 router.post("/accept-delivery-job", deliveryControllers.acceptDeliveryJob);
+router.post("/getJobDeliveryNotificationDetail", deliveryControllers.getJobDeliveryNotificationDetail);
 module.exports = router;

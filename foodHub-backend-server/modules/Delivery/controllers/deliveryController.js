@@ -3,10 +3,12 @@ const DeliveryPartner = require("../../accesscontrol/models/deliveryPartner");
 const User = require("../../accesscontrol/models/user");
 const Account = require("../../accesscontrol/models/account");
 const Seller = require("../../accesscontrol/models/seller");
+const Order= require("../../order/models/order");
 const DeliveryDetail = require("../models/deliveryDetail");
 const { promisify } = require('node:util');
 const jwt=require("jsonwebtoken");
 const path=require("path");
+const axios=require("axios");
 
 const dotenv=require("dotenv");
 dotenv.config(path.join(__dirname, ".env"));
@@ -21,6 +23,7 @@ const deliveryAssignmentMap=require("../../../socket/sources/DeliveryAssignmentM
 
 //delivery
 const {selectNextSuitableDeliveryPartner}= require("../../order/controllers/userController");
+const { options } = require("mongoose");
 
 
 /**
@@ -240,5 +243,105 @@ exports.refuseDeliveryJob=async (req, res, next)=>{
     }
   } catch (error) {
     next(error, req, res, next);
+  }
+}
+
+exports.getJobDeliveryNotificationDetail=async(req, res, next)=>{
+  try {
+    const {jwtToken, orderId}=req.body;
+    const decodedJWT=await promisify(jwt.verify)(jwtToken, process.env.JWT_SECRET_KEY);
+    let deliveryDetail=await DeliveryDetail.findOne({
+      order:orderId
+    });
+    
+    if(deliveryDetail){
+      return res.status(400).json({
+        status:"fail",
+        mess:`The order ${orderId} is already assigned`
+      });
+    }
+    else{
+      let order= await Order.findById(orderId)
+      .populate({
+        path:"seller.sellerId",
+        select:"address formattedAddress"
+      });
+
+      let ans={
+          deliveryCharge:null,
+          totalItemMoney:null,
+          sellerAddress:{
+              formattedAddress:null,
+              pos:{
+                  lng:null,
+                  lat:null
+              }
+          },
+          customerAddress:{
+              formattedAddress:null,
+              pos:{
+                  lng:null,
+                  lat:null
+              }
+          }
+      };
+      let sellerDistance={
+          "distance": {
+              "text": null,
+              "value": null
+          },
+          "duration": {
+              "text": null,
+              "value": null
+          }
+      };
+      let customerDistance={
+          "distance": {
+              "text": null,
+              "value": null
+          },
+          "duration": {
+              "text": null,
+              "value": null
+          }
+      };
+            //get seller address
+      ans.sellerAddress.formattedAddress=order.seller.sellerId.formattedAddress;
+      ans.sellerAddress.pos.lat=order.seller.sellerId.address.lat;
+      ans.sellerAddress.pos.lng=order.seller.sellerId.address.lng;
+      //get customer address
+      ans.customerAddress.formattedAddress=order.user.address.street;
+      ans.customerAddress.pos.lat=order.user.address.lat;
+      ans.customerAddress.pos.lng=order.user.address.lng;
+      
+      let deliveryPartnerPos=deliveryPartnerMap.get(decodedJWT.accountId).location;
+      //get distance from the assigned delivery partner to the seller
+      let url=`${process.env.GOONG_DISTANCEMATRIX}?origins=${deliveryPartnerPos.lat},${deliveryPartnerPos.lng}&destinations=${ans.sellerAddress.pos.lat},${ans.sellerAddress.pos.lng}&vehicle=car&api_key=${process.env.GOONG_API_KEY}`;
+      let distancesMatrix=await axios.get(`${process.env.GOONG_DISTANCEMATRIX}?origins=${deliveryPartnerPos.lat},${deliveryPartnerPos.lng}&destinations=${ans.sellerAddress.pos.lat},${ans.sellerAddress.pos.lng}&vehicle=car&api_key=${process.env.GOONG_API_KEY}`)
+      distancesMatrix=distancesMatrix.data;
+      sellerDistance.distance=distancesMatrix.rows[0].elements[0].distance;
+      sellerDistance.duration=distancesMatrix.rows[0].elements[0].duration;
+      //get distance from the seller partner to the customer
+      distancesMatrix=await axios.get(`${process.env.GOONG_DISTANCEMATRIX}?origins=${ans.sellerAddress.pos.lat},${ans.sellerAddress.pos.lng}&destinations=${ans.customerAddress.pos.lat},${ans.customerAddress.pos.lng}&vehicle=car&api_key=${process.env.GOONG_API_KEY}`)
+      distancesMatrix=distancesMatrix.data;
+      customerDistance.distance=distancesMatrix.rows[0].elements[0].distance;
+      customerDistance.duration=distancesMatrix.rows[0].elements[0].duration;
+      
+      ans.deliveryCharge=parseFloat(process.env.DELIVERY_CHARGE_BASE)+
+        parseFloat(process.env.DELIVERY_CHARGE_RATE_PER_KM)*(sellerDistance.distance.value/1000+customerDistance.distance.value/1000);
+      //calculate order total item money
+      ans.totalItemMoney=order.totalItemMoney;
+
+      return res.status(200).json({
+        status:"ok",
+        data:ans
+      });
+    }
+
+
+  } catch (error) {
+    // next(error, req, res, next);
+    console.log(error);
+    return;
   }
 }

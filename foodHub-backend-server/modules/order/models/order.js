@@ -57,12 +57,16 @@ const orderSchema = new Schema(
       },
     },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON:{virtuals:true},//HERE HERE: option
+    toObject:{virtuals:true}
+  }
 );
 orderSchema.virtual("totalItemMoney").get(function(){
   let res=0;
   for (let foodSelection of this.items){
-    totalItemMoney+=foodSelection.item.price*foodSelection.quantity;
+    res+=foodSelection.item.price*foodSelection.quantity;
   }
   return res;
 })
