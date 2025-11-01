@@ -44,7 +44,7 @@ import cart from "./pages/cart";
 import orders from "./pages/orders";
 import profile from "./pages/profile";
 import Invoice from "./pages/Invoice";
-import DeliveryJobNotification from "./pages/DeliveryJobNotification";
+import DeliveryJobNotification from "./pages/deliveryJobNotification";
 import ReactRouterHistoryProvider from "./components/ReactRouterHistoryProvider";
 
 // //socket

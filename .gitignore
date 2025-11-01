@@ -1,4 +1,18 @@
-node_modules/
 *.env
 /foodHub-backend-server/images/
+
+# Compiled JavaScript files and Source Maps
+*.js
+*.js.map
+
+# TypeScript declaration files (if not intended for publishing)
+*.d.ts
+
+# Node.js modules
+node_modules/
+
+# Build output directories (as specified in tsconfig.json's outDir)
+dist/
+build/
+out/
 
