@@ -10,6 +10,7 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 
+
 import { logoutAction } from "../redux/actions/authActions";
 
 const useStyles = makeStyles(() => ({
@@ -48,7 +49,6 @@ export default function AppBarPrimary() {
   const handleLogout = () => {
     dispatch(logoutAction(history));
   };
-
   return (
     <AppBar position="static" className={classes.appBar}>
       <Toolbar>
@@ -65,6 +65,25 @@ export default function AppBarPrimary() {
               </Typography>
               <Link to="/seller/orders">
                 <Button className={classes.buttonStyles}>Orders</Button>
+              </Link>
+              <Button
+                onClick={handleLogout}
+                className={classes.buttonStyles}
+                variant="outlined"
+              >
+                Logout
+              </Button>
+            </div>
+          ) : role === "ROLE_DELIVERY" ? ( // Thêm kiểm tra cho ROLE_DELIVERY
+            <div className={classes.buttons}>
+              <Typography className={classes.buttonStyles}>
+                Hello, {firstName} {lastName}
+              </Typography>
+              <Link to="/delivery/orderDetail"> {/* Thêm link Hồ sơ cho Delivery */}
+                <Button className={classes.buttonStyles}>orderDetail</Button>
+              </Link>
+              <Link to="/delivery/profile"> {/* Thêm link Hồ sơ cho Delivery */}
+                <Button className={classes.buttonStyles}>Profile</Button>
               </Link>
               <Button
                 onClick={handleLogout}

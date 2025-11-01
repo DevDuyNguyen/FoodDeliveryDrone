@@ -1,14 +1,26 @@
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 var mongoose = require("mongoose");
+const path=require("path");
+const dotenv=require("dotenv");
+dotenv.config(path.join(__dirname, ".env"));
 
-const Seller = require("../models/seller");
-const Item = require("../models/item");
-const User = require("../models/user");
-const Account = require("../models/account");
-const Order = require("../models/order");
-const io = require("../util/socket");
-const app = require("../app");
+const Seller = require("../../accesscontrol/models/seller");
+const Item = require("../../menu/models/item");
+const User = require("../../accesscontrol/models//user");
+const Account = require("../../accesscontrol/models/account");
+const Order = require("../../order/models/order");
+const io = require("../../../util/socket");
+const app = require("../../../app");
+const DeliveryPartner = require("../../accesscontrol/models/deliveryPartner");
+
+//socket
+const DeliveyPartnerSocketMap=require("../../../socket/sources/DeliveryPartnerSource");
+const {getIO}=require("../../../util/socket");
+const {getObjectNearAPlace}=require("../../../util/delivery");
+const order = require("../../order/models/order");
+const deliveryPartnerMap = require("../../../socket/sources/DeliveryPartnerSource");
+const deliveryAssignmentMap=require("../../../socket/sources/DeliveryAssignmentMap");
 
 exports.getRestaurants = (req, res, next) => {
   Seller.find()
@@ -230,7 +242,7 @@ exports.getLoggedInUser = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   let decodedToken;
   try {
-    decodedToken = jwt.verify(token, "supersecretkey-foodWebApp");
+    decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
   } catch (err) {
     err.statusCode = 500;
     throw err;
@@ -244,6 +256,7 @@ exports.getLoggedInUser = (req, res, next) => {
   const accountId = decodedToken.accountId;
   let accountObj;
   let sellerObj;
+  console.log("Account id", accountId);
 
   Account.findById(accountId)
     .then((account) => {
@@ -265,6 +278,16 @@ exports.getLoggedInUser = (req, res, next) => {
         return Seller.findOne({ account: accountObj._id })
           .populate("items")
           .populate({ path: "account", select: ["email", "role"] });
+      }
+    })
+    .then((seller) => {
+      if (seller) {
+        return seller;
+      } else {
+        return DeliveryPartner.findOne({ account: accountObj._id }).populate({
+          path: "account",
+          select: ["email", "role"],
+        });
       }
     })
     .then((result) => {
@@ -323,9 +346,10 @@ exports.postOrder = (req, res, next) => {
           for (const clientId of Object.keys(app.clients)) {
             // console.log(app.clients[clientId].socket);
             if (clientId.toString() === seller._id.toString()) {
-              io.getIO().sockets.connected[
-                app.clients[clientId].socket
-              ].emit("orders", { action: "create", order: order });
+              io.getIO().sockets.connected[app.clients[clientId].socket].emit(
+                "orders",
+                { action: "create", order: order }
+              );
             }
           }
         });
@@ -355,7 +379,7 @@ exports.getOrders = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   let decodedToken;
   try {
-    decodedToken = jwt.verify(token, "supersecretkey-foodWebApp");
+    decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
   } catch (err) {
     err.statusCode = 500;
     throw err;
@@ -394,6 +418,80 @@ exports.getOrders = (req, res, next) => {
     });
 };
 
+//HERE HERE HERE HERE
+function selectNextSuitableDeliveryPartner(orderId){
+  //find order information
+  let order=Order
+      .findById(orderId)
+      .populate({
+        path:"seller.sellerId",
+        select:"address"
+      })
+      .then(order=>{
+        //find suitable delivery partner
+        let deliveryAssignment=deliveryAssignmentMap.get(orderId);
+        let ans=getObjectNearAPlace({
+            lng:order.seller.sellerId.address.lng,
+            lat:order.seller.sellerId.address.lat
+          }, Array.from(deliveryPartnerMap.entries()).map(([id, info])=>{
+              return {
+                id:id,
+                pos:info.location
+              }
+            }
+          ),
+          10,
+          (deliveryAssignment)?deliveryAssignment.refuser:[]
+        );
+        if(!ans){
+          if(deliveryAssignment){
+            deliveryAssignment.count+1;
+          }
+          else{
+            deliveryAssignmentMap.set(orderId,{
+              count:0
+            })
+          }
+          return selectNextSuitableDeliveryPartner();
+        }
+        console.log("Suitable driver:", ans);
+        //check if this order is assgined before
+        if(!deliveryAssignment){
+          deliveryAssignmentMap.set(orderId, {
+              accountId:(ans)?ans.id:null,
+              timeout:setTimeout(() => {
+                selectNextSuitableDeliveryPartner(orderId);
+              }, (parseInt(process.env.DELIVERY_JOB_ACCEPT_TIMEOUT)+2*parseInt(process.env.NETWORK_DELAY))*1000),
+              count:0,
+              refuser:[]
+          });
+        }
+        else{
+          if(deliveryAssignment.count>process.env.MAX_ASSIGNMENT_ATTEMP){
+            //[not done]cancel order, cause found no suitable delivery partner
+            console.log(`order ${orderId} will be cancelled, cause found no suitable delivery partner`);
+            deliveryAssignmentMap.delete(orderId);
+            return;
+          }
+          deliveryAssignment.accountId=(ans)?ans.id:null;
+          deliveryAssignment.timeout=setTimeout(() => {
+                selectNextSuitableDeliveryPartner(orderId);
+              }, (parseInt(process.env.DELIVERY_JOB_ACCEPT_TIMEOUT)+2*parseInt(process.env.NETWORK_DELAY))*1000
+            );
+          deliveryAssignment.count+=1;       
+        }
+        const deliveryPartnerSocket=deliveryPartnerMap.get(ans.id).socketId;
+        const io=getIO();
+        io.to(deliveryPartnerSocket).emit("delivery:job_notification",{
+          orderId:orderId,
+          timeout:process.env.DELIVERY_JOB_ACCEPT_TIMEOUT
+        });
+
+      });
+
+}
+exports.selectNextSuitableDeliveryPartner=selectNextSuitableDeliveryPartner;
+
 exports.postOrderStatus = (req, res, next) => {
   const authHeader = req.get("Authorization");
   if (!authHeader) {
@@ -405,7 +503,7 @@ exports.postOrderStatus = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   let decodedToken;
   try {
-    decodedToken = jwt.verify(token, "supersecretkey-foodWebApp");
+    decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
   } catch (err) {
     err.statusCode = 500;
     throw err;
@@ -440,6 +538,9 @@ exports.postOrderStatus = (req, res, next) => {
     })
     .then((updatedOrder) => {
       io.getIO().emit("orders", { action: "update", order: updatedOrder });
+      if(status=="Ready"){
+        selectNextSuitableDeliveryPartner(orderId);
+      }
       res.status(200).json({ updatedOrder });
     })
     .catch((err) => {
@@ -461,6 +562,9 @@ exports.getRestaurantsByAddress = (req, res, next) => {
     .sort({ createdAt: -1 })
     .then((sellers) => {
       const sellersVerified = sellers.filter((restaurant) => {
+        if (restaurant.account) console.error("yes");
+        else console.error("no");
+
         return restaurant.account.isVerified === true;
       });
 

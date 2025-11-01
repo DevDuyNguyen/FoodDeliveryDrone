@@ -29,7 +29,7 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./util/scrollToTop";
 
 //restrict routes
-import { AuthRoute, SellerRoute, UserRoute } from "./util/route";
+import { AuthRoute, SellerRoute, UserRoute,DeliveryRoute } from "./util/route";
 
 //pages
 import home from "./pages/home";
@@ -37,10 +37,19 @@ import error404 from "./pages/404";
 import signup from "./pages/sign-up";
 import login from "./pages/login";
 import addRestaurant from "./pages/addRestaurant";
+import delivery from "./pages/delivery"
 import restaurant from "./pages/restaurant";
 import sellerDash from "./pages/sellerDashboard";
 import cart from "./pages/cart";
 import orders from "./pages/orders";
+import profile from "./pages/profile";
+import Invoice from "./pages/Invoice";
+import DeliveryJobNotification from "./pages/DeliveryJobNotification";
+import ReactRouterHistoryProvider from "./components/ReactRouterHistoryProvider";
+
+// //socket
+// import {initSocket, getSocket} from "./socket/socket"
+// const io=initSocket(process.env.REACT_APP_SERVER_URL);
 
 const theme = createMuiTheme(themeFile);
 
@@ -61,17 +70,20 @@ if (token) {
 
 function App() {
   console.log("App");
-
   return (
     <MuiThemeProvider theme={theme}>
       <Provider store={store}>
         <Router>
+          <ReactRouterHistoryProvider />
           <AppBar />
           <ScrollToTop />
           <Switch>
             <Route exact path="/" component={home} />
             <AuthRoute exact path="/login" component={login} />
             <AuthRoute exact path="/register" component={signup} />
+            <AuthRoute exact path="/delivery" component={delivery} />
+            <DeliveryRoute exact path="/delivery/profile" component={profile} />
+            <DeliveryRoute exact path="/delivery/OrderDetail" component={Invoice} />
             <AuthRoute exact path="/addrestaurant" component={addRestaurant} />
             <UserRoute exact path="/order/:restName" component={restaurant} />
             <SellerRoute
@@ -79,10 +91,12 @@ function App() {
               path="/seller/dashboard"
               component={sellerDash}
             />
-            <h1>LFJALDKJFALDKFJLKJ</h1>
             <UserRoute exact path="/cart" component={cart} />
             <UserRoute exact path="/orders" component={orders} />
             <SellerRoute exact path="/seller/orders" component={orders} />
+            <Route exact path="/deliveryJobNotification">
+              <DeliveryJobNotification />
+            </Route>
             <Route component={error404} />
           </Switch>
           <Footer />

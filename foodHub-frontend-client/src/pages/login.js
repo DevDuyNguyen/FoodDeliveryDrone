@@ -25,6 +25,7 @@ const useStyles = makeStyles((theme) => ({
   hamBurger: {
     height: 200,
     width: 240,
+    marginLeft: 220
   },
 }));
 
@@ -38,11 +39,14 @@ export default function Login() {
   const history = useHistory();
 
   const loginHandle = (props) => {
+    console.log("loginHandle()");
+    
     const userData = {
       email: inputs.email,
       password: inputs.password,
     };
     dispatch(loginAction(userData, history));
+    
   };
 
   const { inputs, handleInputChange, handleSubmit } = useForm(

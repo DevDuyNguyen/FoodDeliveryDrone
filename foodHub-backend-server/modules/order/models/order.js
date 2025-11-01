@@ -19,9 +19,15 @@ const orderSchema = new Schema(
         "Accepted",
         "Completed",
         "Out For Delivery",
+        "Ready",
       ],
     },
     user: {
+      userId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: "User",
+      },
       email: {
         type: String,
         required: true,
@@ -33,11 +39,6 @@ const orderSchema = new Schema(
       name: {
         type: String,
         required: true,
-      },
-      userId: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "User",
       },
     },
     seller: {
@@ -56,7 +57,18 @@ const orderSchema = new Schema(
       },
     },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON:{virtuals:true},//HERE HERE: option
+    toObject:{virtuals:true}
+  }
 );
+orderSchema.virtual("totalItemMoney").get(function(){
+  let res=0;
+  for (let foodSelection of this.items){
+    res+=foodSelection.item.price*foodSelection.quantity;
+  }
+  return res;
+})
 
 module.exports = mongoose.model("Order", orderSchema);

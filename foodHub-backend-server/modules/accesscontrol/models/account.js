@@ -13,14 +13,14 @@ const accountSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["ROLE_USER", "ROLE_ADMIN", "ROLE_SELLER"],
+      enum: ["ROLE_USER", "ROLE_ADMIN", "ROLE_SELLER","ROLE_DELIVERY"],
       required: true,
     },
     accountVerifyToken: String,
     accountVerifyTokenExpiration: Date,
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true }

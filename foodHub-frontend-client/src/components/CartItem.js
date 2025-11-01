@@ -47,7 +47,8 @@ export default function CartItem(props) {
     itemId: { title, price, description, imageUrl, _id },
   } = props;
   const imageUrlSplit = imageUrl.split("\\");
-  const finalImageUrl = `${process.env.REACT_APP_SERVER_URL}/${imageUrlSplit[0]}/${imageUrlSplit[1]}`;
+  const imageURL = imageUrlSplit.join("/");
+  const finalImageUrl = `${process.env.REACT_APP_SERVER_URL}/${imageURL}`;
 
   const dispatch = useDispatch();
 
@@ -85,7 +86,8 @@ export default function CartItem(props) {
               {description}
             </Typography>
             <Typography variant="subtitle1" color="textSecondary">
-              Rs.{price} x {quantity}
+              {process.env.REACT_APP_CURRENCY}
+              {price} x {quantity}
             </Typography>
 
             <div className={classes.buttons}>
@@ -103,7 +105,7 @@ export default function CartItem(props) {
                 color="textPrimary"
                 className={classes.itemTotal}
               >
-                Rs. {price * quantity}
+                {process.env.REACT_APP_CURRENCY} {price * quantity}
               </Typography>
             </div>
           </CardContent>

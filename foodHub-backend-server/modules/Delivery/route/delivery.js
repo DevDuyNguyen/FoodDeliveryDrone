@@ -1,0 +1,12 @@
+const express = require("express");
+const router = express.Router();
+// deliveryControllers = { getFullDeliveryChainMiddleware: [Function] }
+const deliveryControllers = require('../controllers/deliveryController'); 
+
+// Gọi hàm qua tên thuộc tính object (Đã đúng)
+router.get("/getOrderDetail/:accountId", deliveryControllers.getFullDeliveryChainMiddleware);
+router.post('/create-detail', deliveryControllers.createDeliveryDetailMiddleware);
+router.post("/accept-delivery-job", deliveryControllers.acceptDeliveryJob);
+router.post("/getJobDeliveryNotificationDetail", deliveryControllers.getJobDeliveryNotificationDetail);
+router.post("/refuseDeliveryJob", deliveryControllers.refuseDeliveryJob);
+module.exports = router;

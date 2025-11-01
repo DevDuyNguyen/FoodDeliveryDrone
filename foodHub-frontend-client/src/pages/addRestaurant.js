@@ -45,6 +45,7 @@ export default function AddRestaurant() {
   );
 
   const { message, errors } = errorsSeller || {};
+  console.log("error :",errors)
 
   if (message) {
     if (message.includes("Upload an image")) imageError = message;
@@ -71,6 +72,7 @@ export default function AddRestaurant() {
   let paymentError = null;
 
   if (errors) {
+
     for (let error of errors) {
       if (error.msg.includes("valid email")) emailError = error.msg;
       if (error.msg.includes("Email address already")) emailError = error.msg;

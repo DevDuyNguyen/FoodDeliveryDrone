@@ -50,6 +50,9 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Cart = (props) => {
+  console.log("At cart.js:");
+  console.log("currency", process.env.REACT_APP_CURRENCY);
+
   const [step, setStep] = useState(1);
 
   const dispatch = useDispatch();
@@ -68,9 +71,11 @@ const Cart = (props) => {
   let zipError = null;
   let phoneNoError = null;
 
-  if (price !== 0) deliveryCharge = 20;
+  if (price !== 0) deliveryCharge = 30000;
 
   const handlePlaceOrder = () => {
+    console.log("handlePlaceOrder at cart.js");
+
     const userData = {
       street: inputs.street,
       aptName: inputs.aptName,
@@ -254,13 +259,18 @@ const Cart = (props) => {
                     <Typography variant="body2" color="textPrimary">
                       <div className={classes.spaceTypo}>
                         <span>Initial amount</span>
-                        <span>Rs. {price}</span>
+                        <span>
+                          {process.env.REACT_APP_CURRENCY} {price}
+                        </span>
                       </div>
                       <br />
                       <br />
                       <div className={classes.spaceTypo}>
+                        {/* [not done: calculate delivery charge base on distance] */}
                         <span>Delivery Charge</span>
-                        <span>Rs. {deliveryCharge}</span>
+                        <span>
+                          {process.env.REACT_APP_CURRENCY} {deliveryCharge}
+                        </span>
                       </div>
                       <br />
                     </Typography>
@@ -276,7 +286,7 @@ const Cart = (props) => {
                           <div className={classes.spaceTypo}>
                             <span>{item.itemId.title}</span>
                             <span>
-                              Rs.
+                              {process.env.REACT_APP_CURRENCY}
                               {item.itemId.price} x {item.quantity}
                             </span>
                           </div>
@@ -288,7 +298,10 @@ const Cart = (props) => {
                   <Typography gutterBottom variant="h5" noWrap>
                     <div className={classes.spaceTypo}>
                       <span>Grand Total</span>
-                      <span>Rs. {price + deliveryCharge}</span>
+                      <span>
+                        {process.env.REACT_APP_CURRENCY}{" "}
+                        {price + deliveryCharge}
+                      </span>
                     </div>
                     <br />
                   </Typography>

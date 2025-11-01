@@ -9,6 +9,7 @@
       name="description"
       content="online food delivery webApp named FoodHub"
     />
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -32,6 +33,32 @@
       type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"
     ></script>
+    <script>
+    // Cấu hình Tailwind để sử dụng font Inter
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
+                colors: {
+                    green: {
+                        50: '#f0fdf4',
+                        100: '#dcffe4',
+                        200: '#c5fbd1',
+                        300: '#a3f6b7',
+                        400: '#75f290',
+                        500: '#4caf50', /* Màu xanh chính */
+                        600: '#38a169',
+                        700: '#2f855a',
+                        800: '#276b4a',
+                        900: '#1e5239',
+                          }
+                      }
+                  }
+              }
+          }
+      </script>
     <title>FoodHub</title>
   </head>
   <body>

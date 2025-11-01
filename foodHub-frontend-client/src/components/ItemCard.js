@@ -52,10 +52,14 @@ function Alert(props) {
 }
 
 export default function ItemCard(props) {
+  console.log("At ItemCard.js");
+  console.log(process.env.REACT_APP_CURRENCY);
+
   const classes = useStyles();
   const { title, imageUrl, description, price, _id } = props;
   const imageUrlSplit = imageUrl.split("\\");
-  const finalImageUrl = `${process.env.REACT_APP_SERVER_URL}/${imageUrlSplit[0]}/${imageUrlSplit[1]}`; //3002 - server port
+  const imageURL = imageUrlSplit.join("/");
+  const finalImageUrl = `${process.env.REACT_APP_SERVER_URL}/${imageURL}`; //3002 - server port
 
   const dispatch = useDispatch();
 
@@ -140,7 +144,8 @@ export default function ItemCard(props) {
               {description}
             </Typography>
             <Typography variant="subtitle1" color="textSecondary">
-              Rs.{price}
+              {process.env.REACT_APP_CURRENCY}
+              {price}
             </Typography>
           </CardContent>
           {role === "ROLE_SELLER" ? (
