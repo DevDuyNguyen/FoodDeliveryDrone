@@ -1,10 +1,11 @@
+//@ts-nocheck
+
 const path=require("path");
 const dotenv=require("dotenv");
 dotenv.config(path.join(__dirname,".env"));
 
 let io;
-
-module.exports = {
+export default {
   init: (httpServer) => {
     io = require("socket.io")(httpServer,{
       pingTimeout: process.env.PING_TIMEOUT*1000,
