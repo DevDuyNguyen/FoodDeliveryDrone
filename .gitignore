@@ -1,13 +1,6 @@
 *.env
 /foodHub-backend-server/images/
 
-# Compiled JavaScript files and Source Maps
-*.js
-*.js.map
-
-# TypeScript declaration files (if not intended for publishing)
-*.d.ts
-
 # Node.js modules
 node_modules/
 
